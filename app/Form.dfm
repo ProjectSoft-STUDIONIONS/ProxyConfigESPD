@@ -18,7 +18,7 @@ object MainForm: TMainForm
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 16
   object ConnectionGroup: TGroupBox
     Left = 0
     Top = 0

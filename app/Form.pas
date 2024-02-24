@@ -5,9 +5,10 @@ interface
 uses
     Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
     Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-    Vcl.Buttons, Vcl.ComCtrls, Vcl.ToolWin, Settings, System.UITypes,
+    Vcl.Buttons, Vcl.ComCtrls, Vcl.ToolWin, System.UITypes,
     SBPro, Registry, StrUtils, System.Types, System.RegularExpressions,
-    System.ImageList, Vcl.ImgList, System.IOUtils, ThreadUnit, Vcl.Menus;
+    System.ImageList, Vcl.ImgList, System.IOUtils, ThreadUnit, Vcl.Menus,
+    Vcl.XPMan;
 
 type
         TMainForm = class(TForm)
@@ -38,10 +39,13 @@ type
         procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
         procedure PopupMenu2Popup(Sender: TObject);
         procedure N2Click(Sender: TObject);
+        function SetProxy: String;
+        function WinVerNum: Integer;
     private
         { Private declarations }
     public
         { Public declarations }
+        function ReadSetting: String;
         procedure LogApp(S: String; WR: Boolean);
     protected
         procedure CreateParams(var Params: TCreateParams); override;
@@ -71,6 +75,76 @@ implementation
 
 {$R *.dfm}
 
+uses Settings;
+
+function TMainForm.ReadSetting: String;
+var
+    tProxy: String;
+    Values: TStringDynArray;
+begin
+    RegIP := TRegEx.Create('^\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}$');
+    RegPort := TRegEx.Create('^\d{1,4}$');
+    RegSetting := TRegistry.Create;
+    RegSetting.RootKey := HKEY_CURRENT_USER;
+    RegSetting.OpenKey(SettingPath, true);
+    tProxy := RegSetting.ReadString('ProxyServer');
+    if tProxy = '' then
+    begin
+        tProxy := '127.0.0.1:80';
+    end;
+    Values := SplitString(tProxy, ':');
+    { * Если что-то ни так, то приводим к дефолту * }
+    if Length(Values) < 1 then
+        Values[1] := '80';
+    if Not RegIP.IsMatch(Values[0]) then
+        Values[0] := '127.0.0.1';
+    if Not RegPort.IsMatch(Values[1]) then
+        Values[1] := '80';
+    tProxy := Values[0] + ':' + Values[1];
+    RegSetting.WriteString('ProxyServer', tProxy);
+    RegSetting.Free;
+    Result := tProxy;
+end;
+
+
+function TMainForm.SetProxy: String;
+var
+  sProxy: String;
+begin
+  sProxy := ReadSetting;
+  LogApp('Load Config: ' + sProxy, False);
+  if WinVerNum >= 62 then
+  begin
+    // Windows 8 и Старше
+    Vers := true;
+    Result := sProxy;
+  end
+  else
+  begin
+    // Младше Windows 8
+    Vers := False;
+    Result := StringReplace(ProxyVar, '%ip:port%', sProxy,
+      [rfReplaceAll, rfIgnoreCase]);
+  end;
+end;
+{ *
+  ** Определение версии Windows
+  * }
+function TMainForm.WinVerNum: Integer;
+var
+  ver: TOSVersionInfo;
+begin
+  ver.dwOSVersionInfoSize := SizeOf(ver);
+  if GetVersionEx(ver) then
+  begin
+    with ver do
+      Result := StrToInt(IntToStr(dwMajorVersion) + '' +
+        IntToStr(dwMinorVersion));
+  end
+  else
+    Result := 1;
+end;
+
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
     if MainCanClose then
@@ -89,6 +163,7 @@ begin
     MainCanClose := False;
     TrayIcon1.BalloonTitle := 'Прокси Конфиг';
     TrayIcon1.BalloonHint := '';
+    ShowMessage(ReadSetting);
 end;
 
 procedure TMainForm.CreateParams(var Params: TCreateParams);

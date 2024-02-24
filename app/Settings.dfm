@@ -1,9 +1,12 @@
 object SettingsForm: TSettingsForm
   Left = 0
   Top = 0
-  Caption = 'SettingsForm'
-  ClientHeight = 155
-  ClientWidth = 349
+  AutoSize = True
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+  ClientHeight = 90
+  ClientWidth = 255
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,6 +15,70 @@ object SettingsForm: TSettingsForm
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnShow = FormShow
   PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 16
+  object GroupBox1: TGroupBox
+    Left = 0
+    Top = 0
+    Width = 255
+    Height = 49
+    Align = alTop
+    Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+    TabOrder = 0
+    ExplicitWidth = 349
+    object IpAdress: TIPEdit
+      Left = 2
+      Top = 18
+      Width = 160
+      Height = 29
+      Align = alLeft
+      TabOrder = 0
+      TabStop = True
+      IPString = '0.147.248.84'
+      ExplicitTop = 32
+      ExplicitHeight = 15
+    end
+    object Port: TEdit
+      Left = 162
+      Top = 18
+      Width = 79
+      Height = 29
+      Align = alLeft
+      NumbersOnly = True
+      TabOrder = 1
+      Text = '80'
+    end
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 49
+    Width = 255
+    Height = 41
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = 'Panel1'
+    Padding.Left = 5
+    Padding.Top = 5
+    Padding.Right = 5
+    Padding.Bottom = 5
+    ParentColor = True
+    ShowCaption = False
+    TabOrder = 1
+    ExplicitLeft = 52
+    ExplicitTop = 55
+    ExplicitWidth = 185
+    object BitBtn1: TBitBtn
+      Left = 154
+      Top = 5
+      Width = 96
+      Height = 31
+      Align = alRight
+      Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 0
+      OnClick = BitBtn1Click
+      ExplicitLeft = 144
+    end
+  end
 end
