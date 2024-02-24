@@ -3,112 +3,181 @@ unit Form;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Buttons, Vcl.ComCtrls, Vcl.ToolWin, Settings, System.UITypes,
-  SBPro, Registry, StrUtils, System.Types, System.RegularExpressions,
-  System.ImageList, Vcl.ImgList, System.IOUtils, ThreadUnit;
+    Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+    Vcl.Buttons, Vcl.ComCtrls, Vcl.ToolWin, Settings, System.UITypes,
+    SBPro, Registry, StrUtils, System.Types, System.RegularExpressions,
+    System.ImageList, Vcl.ImgList, System.IOUtils, ThreadUnit, Vcl.Menus;
 
 type
-  TMainForm = class(TForm)
-    ConnectionGroup: TGroupBox;
-    Panel1: TPanel;
-    ConnectionBtn: TBitBtn;
-    ImageList1: TImageList;
-    ds: TListBox;
-    Timer1: TTimer;
-    TrayIcon1: TTrayIcon;
-    StatusBar1: TStatusBarPro;
-    procedure FormCreate(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
-    procedure ConnectionBtnClick(Sender: TObject);
-    procedure OnEnabledTerminate(Sender: TObject);
-    procedure OnDisabledTerminate(Sender: TObject);
-    procedure TrayIcon1Click(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
-    procedure LogApp(S: String; WR: Boolean);
-  protected
-    procedure CreateParams(var Params: TCreateParams); override;
-  end;
+        TMainForm = class(TForm)
+        ConnectionGroup: TGroupBox;
+        Panel1: TPanel;
+        ConnectionBtn: TBitBtn;
+        ImageList1: TImageList;
+        ds: TListBox;
+        Timer1: TTimer;
+        TrayIcon1: TTrayIcon;
+        StatusBar1: TStatusBarPro;
+        PopupMenu1: TPopupMenu;
+        N1: TMenuItem;
+        PopupMenu2: TPopupMenu;
+        ImageList2: TImageList;
+        N2: TMenuItem;
+        N3: TMenuItem;
+        N4: TMenuItem;
+        procedure FormCreate(Sender: TObject);
+        procedure Timer1Timer(Sender: TObject);
+        procedure ConnectionBtnClick(Sender: TObject);
+        procedure OnEnabledTerminate(Sender: TObject);
+        procedure OnDisabledTerminate(Sender: TObject);
+        procedure MenuItem1Click(Sender: TObject);
+        procedure TrayIcon1MouseDown(Sender: TObject; Button: TMouseButton;
+            Shift: TShiftState; X, Y: Integer);
+        procedure TrayIcon1Click(Sender: TObject);
+        procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+        procedure PopupMenu2Popup(Sender: TObject);
+        procedure N2Click(Sender: TObject);
+    private
+        { Private declarations }
+    public
+        { Public declarations }
+        procedure LogApp(S: String; WR: Boolean);
+    protected
+        procedure CreateParams(var Params: TCreateParams); override;
+end;
 
 const
-  CurrentPath = 'Software\Microsoft\Windows\CurrentVersion\Internet Settings';
-  SettingPath = 'Software\ProxyConfigApp';
-  ProxyOverride = '*.localhost;*.school;*.localschool;*.hostname;<local>';
-  ProxyVar = 'http=%ip:port%;https=%ip:port%';
+    CurrentPath = 'Software\Microsoft\Windows\CurrentVersion\Internet Settings';
+    SettingPath = 'Software\ProxyConfigApp';
+    ProxyOverride = '*.localhost;*.school;*.localschool;*.hostname;<local>';
+    ProxyVar = 'http=%ip:port%;https=%ip:port%';
 
 var
-  MainForm: TMainForm;
-  i: Integer;
-  Vers: Boolean;
-  Reg: TRegistry;
-  RegSetting: TRegistry;
-  RegIP: TRegEx;
-  RegPort: TRegEx;
-  MainCanClose: Boolean;
-  Proxy: String;
-  MyThread: ExecuteCMD;
-  InitialDir: String;
-  userDirectory: String;
-  logerPath: String;
+    MainForm: TMainForm;
+    MyThread: ExecuteCMD;
+    i: Integer;
+    Vers: Boolean;
+    Reg: TRegistry;
+    RegSetting: TRegistry;
+    RegIP: TRegEx;
+    RegPort: TRegEx;
+    MainCanClose: Boolean;
+    Proxy: String;
+    InitialDir: String;
+    userDirectory: String;
 
 implementation
 
 {$R *.dfm}
 
-procedure TMainForm.LogApp(S: String; WR: Boolean);
-var
-  text: string;
+procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now) + ' > ' + S;
-  if Not WR then
-    ds.Items.Add(text);
-  SendMessage(ds.Handle, WM_VSCROLL, SB_BOTTOM, 0);
-end;
-
-procedure TMainForm.ConnectionBtnClick(Sender: TObject);
-begin
-  ConnectionBtn.Enabled := False;
-  if ConnectionBtn.ImageIndex = 1 then
-  begin
-    MyThread := ExecuteCMD.Create(False);
-    MyThread.OnTerminate := OnDisabledTerminate;
-  end
-  else
-  begin
-    MyThread := ExecuteCMD.Create(False);
-    MyThread.OnTerminate := OnEnabledTerminate;
-  end;
-end;
-
-procedure TMainForm.CreateParams(var Params: TCreateParams);
-begin
-  inherited;
-  Params.ExStyle := Params.ExStyle and not WS_EX_APPWINDOW;
-  Params.WndParent := Application.Handle;
+    if MainCanClose then
+        LogApp('=========  Остановка Программы  ==========', true)
+    else
+        MainForm.Visible := False;
+    CanClose := MainCanClose;
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  ds.Items.Clear;
-  userDirectory := TPath.Combine(TPath.GetHomePath, 'ProxyConfig');
-  if Not TDirectory.Exists(userDirectory) then
-    TDirectory.CreateDirectory(userDirectory);
-  TrayIcon1.BalloonTitle := 'Прокси Конфиг';
-  TrayIcon1.BalloonHint := '';
+    ds.Items.Clear;
+    userDirectory := TPath.Combine(TPath.GetHomePath, 'ProxyConfig');
+    if Not TDirectory.Exists(userDirectory) then
+        TDirectory.CreateDirectory(userDirectory);
+    MainCanClose := False;
+    TrayIcon1.BalloonTitle := 'Прокси Конфиг';
+    TrayIcon1.BalloonHint := '';
+end;
+
+procedure TMainForm.CreateParams(var Params: TCreateParams);
+begin
+    inherited;
+        Params.ExStyle := Params.ExStyle and not WS_EX_APPWINDOW;
+        Params.WndParent := Application.Handle;
+end;
+
+procedure TMainForm.LogApp(S: String; WR: Boolean);
+var
+    text: string;
+begin
+    text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now) + ' > ' + S;
+    if Not WR then
+        ds.Items.Add(text);
+    SendMessage(ds.Handle, WM_VSCROLL, SB_BOTTOM, 0);
+end;
+
+procedure TMainForm.MenuItem1Click(Sender: TObject);
+begin
+    MainForm.Visible := True;
+    MainForm.FormStyle := fsStayOnTop;
+    MainForm.FormStyle := fsNormal;
+    SettingsForm.ShowModal;
+end;
+
+procedure TMainForm.N2Click(Sender: TObject);
+begin
+    if not SettingsForm.Visible then
+    begin
+      if MainForm.Visible = False then
+      begin
+          MainForm.Visible := True;
+          MainForm.FormStyle := fsStayOnTop;
+          MainForm.FormStyle := fsNormal;
+      end
+      else
+      begin
+          MainForm.Visible := False;
+      end;
+    end;
+end;
+
+procedure TMainForm.ConnectionBtnClick(Sender: TObject);
+begin
+    ConnectionBtn.Enabled := False;
+    TrayIcon1.PopupMenu := nil;
+    StatusBar1.PopupMenu := nil;
+    ds.PopupMenu := nil;
+    if ConnectionBtn.ImageIndex = 1 then
+    begin
+        MyThread := ExecuteCMD.Create(False);
+        MyThread.OnTerminate := OnDisabledTerminate;
+    end
+    else
+    begin
+        MyThread := ExecuteCMD.Create(False);
+        MyThread.OnTerminate := OnEnabledTerminate;
+    end;
+    TrayIcon1.Animate := True;
 end;
 
 procedure TMainForm.Timer1Timer(Sender: TObject);
 begin
-  StatusBar1.Panels.Items[1].Text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now);
+    StatusBar1.Panels.Items[1].Text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now);
+end;
+
+procedure TMainForm.TrayIcon1Click(Sender: TObject);
+begin
+    if MainForm.Visible = False then
+        MainForm.Visible := True;
+    MainForm.FormStyle := fsStayOnTop;
+    MainForm.FormStyle := fsNormal;
+end;
+
+procedure TMainForm.TrayIcon1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+    if MainForm.Visible = False then
+        MainForm.Visible := True;
+    MainForm.FormStyle := fsStayOnTop;
+    MainForm.FormStyle := fsNormal;
 end;
 
 procedure TMainForm.OnDisabledTerminate(Sender: TObject);
 begin
     LogApp('Proxy Отключен', False);
+    TrayIcon1.Animate := False;
     ConnectionBtn.ImageIndex := 0;
     ConnectionBtn.DisabledImageIndex := 0;
     ConnectionBtn.HotImageIndex := 0;
@@ -119,11 +188,15 @@ begin
     StatusBar1.Panels.Items[0].Text :=  'Не подключено';
     ConnectionBtn.Enabled := True;
     TrayIcon1.IconIndex := 0;
+    TrayIcon1.PopupMenu := PopupMenu2;
+    StatusBar1.PopupMenu := PopupMenu1;
+    ds.PopupMenu := PopupMenu1;
 end;
 
 procedure TMainForm.OnEnabledTerminate(Sender: TObject);
 begin
     LogApp('Proxy Подключен', False);
+    TrayIcon1.Animate := False;
     ConnectionBtn.ImageIndex := 1;
     ConnectionBtn.DisabledImageIndex := 1;
     ConnectionBtn.HotImageIndex := 1;
@@ -134,20 +207,33 @@ begin
     StatusBar1.Panels.Items[0].Text :=  'Подключено';
     ConnectionBtn.Enabled := True;
     TrayIcon1.IconIndex := 1;
+    TrayIcon1.PopupMenu := PopupMenu2;
+    StatusBar1.PopupMenu := PopupMenu1;
+    ds.PopupMenu := PopupMenu1;
 end;
 
-procedure TMainForm.TrayIcon1Click(Sender: TObject);
+procedure TMainForm.PopupMenu2Popup(Sender: TObject);
 begin
-  TrayIcon1.BalloonTitle := 'Прокси Конфиг';
-  if TrayIcon1.IconIndex = 1 then
-  begin
-    TrayIcon1.BalloonHint := 'Прокси Включено.';
-  end
-  else
-  begin
-    TrayIcon1.BalloonHint := 'Прокси Отключено.';
-  end;
-  TrayIcon1.ShowBalloonHint;
+    if not SettingsForm.Showing then
+    begin
+        N2.Enabled := True;
+        N4.Enabled := True;
+    end
+    else
+    begin
+        N2.Enabled := False;
+        N4.Enabled := False;
+    end;
+    if MainForm.Visible then
+    begin
+        N2.Caption := 'Свернуть';
+        N2.ImageIndex := 3;
+    end
+    else
+    begin
+        N2.Caption := 'Развернуть';
+        N2.ImageIndex := 4;
+    end;
 end;
 
 end.
