@@ -1,9 +1,12 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'MainForm'
-  ClientHeight = 245
-  ClientWidth = 302
+  AutoSize = True
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = #1055#1088#1086#1082#1089#1080' '#1050#1086#1085#1092#1080#1075
+  ClientHeight = 198
+  ClientWidth = 381
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,24 +21,26 @@ object MainForm: TMainForm
   object ConnectionGroup: TGroupBox
     Left = 0
     Top = 0
-    Width = 302
-    Height = 57
+    Width = 381
+    Height = 41
     Align = alTop
     Caption = #1055#1086#1076#1082#1083#1102#1095#1077#1085#1080#1077
-    TabOrder = 0
+    TabOrder = 1
     object Panel1: TPanel
       Left = 2
       Top = 15
-      Width = 298
-      Height = 40
+      Width = 377
+      Height = 24
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitWidth = 537
+      ExplicitHeight = 40
       object ConnectionBtn: TBitBtn
         Left = 0
         Top = 0
-        Width = 298
-        Height = 40
+        Width = 377
+        Height = 24
         Align = alClient
         Caption = #1055#1086#1076#1082#1083#1102#1095#1080#1090#1100
         DisabledImageIndex = 0
@@ -45,15 +50,17 @@ object MainForm: TMainForm
         PressedImageIndex = 0
         SelectedImageIndex = 0
         TabOrder = 0
+        TabStop = False
         OnClick = ConnectionBtnClick
+        ExplicitTop = -4
       end
     end
   end
-  object ListBox1: TListBox
+  object ds: TListBox
     Left = 0
-    Top = 57
-    Width = 302
-    Height = 188
+    Top = 41
+    Width = 381
+    Height = 138
     Align = alClient
     ItemHeight = 13
     Items.Strings = (
@@ -77,8 +84,34 @@ object MainForm: TMainForm
       '18'
       '19'
       '20')
-    TabOrder = 1
+    TabOrder = 0
     StyleElements = [seFont, seClient]
+  end
+  object StatusBar1: TStatusBarPro
+    Left = 0
+    Top = 179
+    Width = 381
+    Height = 19
+    Images = ImageList1
+    Panels = <
+      item
+        AutoSize = True
+        ImageIndex = 0
+        Text = #1053#1077' '#1087#1086#1076#1082#1083#1102#1095#1077#1085#1086
+        Width = 235
+      end
+      item
+        Alignment = taRightJustify
+        AutoWidth = True
+        MaxWidth = 1000
+        MinWidth = 130
+        Text = #1042#1088#1077#1084#1103
+        Width = 130
+      end>
+    SimplePanel = False
+    ExplicitLeft = 184
+    ExplicitTop = 176
+    ExplicitWidth = 0
   end
   object ImageList1: TImageList
     Left = 136
@@ -222,5 +255,21 @@ object MainForm: TMainForm
       000000000000000080018001000000008001800100000000C003C00300000000
       E007E00700000000F81FF81F0000000000000000000000000000000000000000
       000000000000}
+  end
+  object Timer1: TTimer
+    Interval = 250
+    OnTimer = Timer1Timer
+    Left = 80
+    Top = 80
+  end
+  object TrayIcon1: TTrayIcon
+    Hint = #1055#1088#1086#1082#1089#1080' '#1050#1086#1085#1092#1080#1075
+    BalloonTitle = #1055#1088#1086#1082#1089#1080' '#1050#1086#1085#1092#1080#1075
+    BalloonFlags = bfInfo
+    Icons = ImageList1
+    Visible = True
+    OnClick = TrayIcon1Click
+    Left = 178
+    Top = 79
   end
 end
