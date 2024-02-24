@@ -163,7 +163,8 @@ begin
     MainCanClose := False;
     TrayIcon1.BalloonTitle := 'Прокси Конфиг';
     TrayIcon1.BalloonHint := '';
-    ShowMessage(ReadSetting);
+    Proxy := SetProxy;
+    ShowMessage(Proxy);
 end;
 
 procedure TMainForm.CreateParams(var Params: TCreateParams);

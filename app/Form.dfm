@@ -29,9 +29,9 @@ object MainForm: TMainForm
     TabOrder = 1
     object Panel1: TPanel
       Left = 2
-      Top = 15
+      Top = 18
       Width = 289
-      Height = 24
+      Height = 21
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
@@ -39,7 +39,7 @@ object MainForm: TMainForm
         Left = 0
         Top = 0
         Width = 289
-        Height = 24
+        Height = 21
         Align = alClient
         Caption = #1055#1086#1076#1082#1083#1102#1095#1080#1090#1100
         DisabledImageIndex = 0
@@ -60,7 +60,6 @@ object MainForm: TMainForm
     Width = 293
     Height = 117
     Align = alClient
-    ItemHeight = 13
     Items.Strings = (
       '1'
       '2'
