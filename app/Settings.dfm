@@ -1,12 +1,10 @@
 object SettingsForm: TSettingsForm
   Left = 0
   Top = 0
-  AutoSize = True
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
-  Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-  ClientHeight = 90
-  ClientWidth = 255
+  ClientHeight = 121
+  ClientWidth = 253
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,64 +19,120 @@ object SettingsForm: TSettingsForm
   object GroupBox1: TGroupBox
     Left = 0
     Top = 0
-    Width = 255
-    Height = 49
+    Width = 253
+    Height = 44
     Align = alTop
-    Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+    Padding.Left = 10
+    Padding.Right = 10
     TabOrder = 0
-    ExplicitWidth = 349
     object IpAdress: TIPEdit
-      Left = 2
+      Left = 12
       Top = 18
-      Width = 160
-      Height = 29
-      Align = alLeft
+      Width = 164
+      Height = 24
+      Align = alClient
       TabOrder = 0
       TabStop = True
-      IPString = '0.147.248.84'
-      ExplicitTop = 32
-      ExplicitHeight = 15
+      IPString = '10.0.0.0'
     end
     object Port: TEdit
-      Left = 162
+      Left = 176
       Top = 18
-      Width = 79
-      Height = 29
-      Align = alLeft
+      Width = 65
+      Height = 24
+      Align = alRight
       NumbersOnly = True
       TabOrder = 1
-      Text = '80'
+      OnExit = PortExit
+      ExplicitLeft = 240
+      ExplicitHeight = 19
     end
   end
   object Panel1: TPanel
     Left = 0
-    Top = 49
-    Width = 255
-    Height = 41
+    Top = 78
+    Width = 253
+    Height = 40
     Align = alTop
     BevelOuter = bvNone
     Caption = 'Panel1'
-    Padding.Left = 5
-    Padding.Top = 5
-    Padding.Right = 5
+    Padding.Left = 10
+    Padding.Right = 10
     Padding.Bottom = 5
     ParentColor = True
     ShowCaption = False
     TabOrder = 1
-    ExplicitLeft = 52
-    ExplicitTop = 55
-    ExplicitWidth = 185
+    ExplicitTop = 49
+    ExplicitWidth = 314
     object BitBtn1: TBitBtn
-      Left = 154
-      Top = 5
+      Left = 147
+      Top = 0
       Width = 96
-      Height = 31
+      Height = 35
       Align = alRight
       Kind = bkOK
       NumGlyphs = 2
       TabOrder = 0
       OnClick = BitBtn1Click
-      ExplicitLeft = 144
+      ExplicitLeft = 211
+      ExplicitTop = 21
+      ExplicitHeight = 30
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 44
+    Width = 253
+    Height = 34
+    Align = alTop
+    BevelOuter = bvNone
+    Padding.Left = 10
+    Padding.Top = 5
+    Padding.Right = 10
+    Padding.Bottom = 5
+    TabOrder = 2
+    ExplicitTop = 39
+    ExplicitWidth = 313
+    object ComboBox1: TComboBox
+      Left = 98
+      Top = 5
+      Width = 145
+      Height = 24
+      Margins.Left = 10
+      Align = alRight
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = ComboBox1Change
+      ExplicitLeft = 162
+      ExplicitTop = 6
+    end
+    object Panel3: TPanel
+      Left = 10
+      Top = 5
+      Width = 88
+      Height = 24
+      Align = alClient
+      BevelOuter = bvNone
+      Padding.Top = 3
+      Padding.Right = 10
+      TabOrder = 1
+      ExplicitLeft = 21
+      ExplicitTop = 6
+      ExplicitWidth = 185
+      ExplicitHeight = 41
+      object Label1: TLabel
+        Left = 0
+        Top = 3
+        Width = 78
+        Height = 21
+        Align = alClient
+        Alignment = taRightJustify
+        AutoSize = False
+        ExplicitLeft = 80
+        ExplicitTop = 7
+        ExplicitWidth = 44
+        ExplicitHeight = 16
+      end
     end
   end
 end

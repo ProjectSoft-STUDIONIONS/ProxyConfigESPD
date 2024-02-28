@@ -60,28 +60,36 @@ begin
   Synchronize(
     procedure
     begin
+      // Сброс кеша DNS
       MainForm.LogApp('Сброс кеша DNS', false);
+      ExecuteWait('ipconfig.exe', '/flushdns', True);
     end);
-  ExecuteWait('ipconfig.exe', '/flushdns', True);
+
   Synchronize(
     procedure
     begin
+      // Очистка ARP
       MainForm.LogApp('Очистка ARP', false);
+      ExecuteWait('arp.exe', '-d', True);
     end);
-  ExecuteWait('arp.exe', '-d', True);
+
   Synchronize(
     procedure
     begin
+      // Сброс IP адресов
       MainForm.LogApp('Сброс IP адресов', false);
+      ExecuteWait('ipconfig.exe', '/release', True);
+      ExecuteWait('ipconfig.exe', '/renew ', True);
     end);
-  ExecuteWait('ipconfig.exe', '/release', True);
-  ExecuteWait('ipconfig.exe', '/renew ', True);
+
   Synchronize(
     procedure
     begin
+      // Обновление профиля
       MainForm.LogApp('Обновление профиля', false);
+      ExecuteWait('RUNDLL32.EXE', 'user32.dll,UpdatePerUserSystemParameters ', True);
     end);
-  ExecuteWait('RUNDLL32.EXE', 'user32.dll,UpdatePerUserSystemParameters ', True);
+
 end;
 
 end.

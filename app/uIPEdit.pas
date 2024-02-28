@@ -34,7 +34,7 @@ type
    procedure CreateWnd; override;
    //procedure KeyDown(var Key: Word; Shift: TShiftState);override;
    function IPDwordToString( dw: DWORD ): string;
-   function IPStringToDword( s: string ): DWORD;
+   //function IPStringToDword( s: string ): DWORD;
   public
     { Public declarations }
    constructor Create(AOwner: TComponent); override;
@@ -44,6 +44,7 @@ type
    property IPString : string read GetIPString write SetIPString;
    property CurrentField : Integer read FCurrentField write SetCurrentField;
    procedure Clear;
+   function IPStringToDword( s: string ): DWORD;
 
   end;
 
@@ -116,7 +117,7 @@ begin
 end;
 
 procedure TCustomIPEdit.CreateWnd;
-var i: Integer;
+// var i: Integer;
 begin
  inherited CreateWnd;
  Clear;
@@ -284,33 +285,36 @@ end;}
    FOURTH_IPADDRESS( dw )]);
  end;
 
+ {$WARN NO_RETVAL OFF}
  function TCustomIPEdit.IPStringToDword( s: string ): DWORD;
  var i,j : Integer;
   NewAddr, Part : DWORD;
  begin
- NewAddr := 0;
- try
- i := 0;
-  repeat
-   j := Pos( '.', s );
-   if j<=1 then
-    if i<3 then
-     Abort
-    else
-     Part := StrToInt( s )
-   else
-    Part := StrToInt( Copy( s, 1, j-1 ) );
-   if Part>255 then Abort;
-   Delete( s, 1, j );
-   NewAddr := (NewAddr shl 8) or Part;
-   Inc(i);
-  until i>3;
-  Result := NewAddr;
-  //Windows.MessageBox( 0, pChar(IntToHex(FIPAddress, 8 )), '', MB_Ok );
- except
- end;
+   NewAddr := 0;
+   Part := 0;
+   try
+   i := 0;
+    repeat
+     j := Pos( '.', s );
+     if j<=1 then
+      if i<3 then
+       Abort
+      else
+       Part := StrToInt( s )
+     else
+      Part := StrToInt( Copy( s, 1, j-1 ) );
+     if Part > 255 then Abort;
+     Delete( s, 1, j );
+     NewAddr := (NewAddr shl 8) or Part;
+     Inc(i);
+    until i>3;
+    Result := NewAddr;
+    //Windows.MessageBox( 0, pChar(IntToHex(FIPAddress, 8 )), '', MB_Ok );
+   except
+   end;
 
  end;
+ {$WARN NO_RETVAL ON}
 
  function TCustomIPEdit.GetIPString: string;
  begin

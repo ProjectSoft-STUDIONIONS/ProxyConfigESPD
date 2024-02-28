@@ -4,8 +4,8 @@ object MainForm: TMainForm
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = #1055#1088#1086#1082#1089#1080' '#1050#1086#1085#1092#1080#1075
-  ClientHeight = 180
-  ClientWidth = 293
+  ClientHeight = 150
+  ClientWidth = 321
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,34 +14,35 @@ object MainForm: TMainForm
   Font.Style = []
   OldCreateOrder = False
   Position = poDesktopCenter
+  Visible = True
   StyleElements = [seFont, seClient]
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 16
   object ConnectionGroup: TGroupBox
     Left = 0
     Top = 0
-    Width = 293
+    Width = 321
     Height = 41
     Align = alTop
     Caption = #1055#1086#1076#1082#1083#1102#1095#1077#1085#1080#1077
     TabOrder = 1
     object Panel1: TPanel
       Left = 2
-      Top = 18
-      Width = 289
-      Height = 21
+      Top = 15
+      Width = 317
+      Height = 24
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
       object ConnectionBtn: TBitBtn
         Left = 0
         Top = 0
-        Width = 289
-        Height = 21
+        Width = 317
+        Height = 24
         Align = alClient
-        Caption = #1055#1086#1076#1082#1083#1102#1095#1080#1090#1100
         DisabledImageIndex = 0
         HotImageIndex = 0
         ImageIndex = 0
@@ -57,9 +58,10 @@ object MainForm: TMainForm
   object ds: TListBox
     Left = 0
     Top = 41
-    Width = 293
-    Height = 117
+    Width = 321
+    Height = 87
     Align = alClient
+    ItemHeight = 13
     Items.Strings = (
       '1'
       '2'
@@ -87,8 +89,8 @@ object MainForm: TMainForm
   end
   object StatusBar1: TStatusBarPro
     Left = 0
-    Top = 158
-    Width = 293
+    Top = 128
+    Width = 321
     Height = 22
     Images = ImageList1
     Panels = <
@@ -96,7 +98,7 @@ object MainForm: TMainForm
         AutoSize = True
         ImageIndex = 0
         Text = #1053#1077' '#1087#1086#1076#1082#1083#1102#1095#1077#1085#1086
-        Width = 147
+        Width = 175
       end
       item
         Alignment = taRightJustify
@@ -385,7 +387,7 @@ object MainForm: TMainForm
       000000000000}
   end
   object Timer1: TTimer
-    Interval = 250
+    Interval = 500
     OnTimer = Timer1Timer
     Left = 128
     Top = 48

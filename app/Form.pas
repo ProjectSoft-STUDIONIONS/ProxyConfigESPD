@@ -3,15 +3,15 @@ unit Form;
 interface
 
 uses
-    Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+    Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+    System.Classes, Vcl.Graphics, IniFiles,
     Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
     Vcl.Buttons, Vcl.ComCtrls, Vcl.ToolWin, System.UITypes,
     SBPro, Registry, StrUtils, System.Types, System.RegularExpressions,
-    System.ImageList, Vcl.ImgList, System.IOUtils, ThreadUnit, Vcl.Menus,
-    Vcl.XPMan;
+    System.ImageList, Vcl.ImgList, System.IOUtils, ThreadUnit, Vcl.Menus;
 
 type
-        TMainForm = class(TForm)
+    TMainForm = class(TForm)
         ConnectionGroup: TGroupBox;
         Panel1: TPanel;
         ConnectionBtn: TBitBtn;
@@ -34,22 +34,25 @@ type
         procedure OnDisabledTerminate(Sender: TObject);
         procedure MenuItem1Click(Sender: TObject);
         procedure TrayIcon1MouseDown(Sender: TObject; Button: TMouseButton;
-            Shift: TShiftState; X, Y: Integer);
+          Shift: TShiftState; X, Y: Integer);
         procedure TrayIcon1Click(Sender: TObject);
         procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
         procedure PopupMenu2Popup(Sender: TObject);
         procedure N2Click(Sender: TObject);
-        function SetProxy: String;
+        function GetProxy: String;
         function WinVerNum: Integer;
+    procedure FormShow(Sender: TObject);
     private
         { Private declarations }
     public
         { Public declarations }
-        function ReadSetting: String;
+        function ReadSettingProxy: String;
+        procedure WriteSettingProxy;
         procedure LogApp(S: String; WR: Boolean);
+        procedure LoadLang;
     protected
         procedure CreateParams(var Params: TCreateParams); override;
-end;
+    end;
 
 const
     CurrentPath = 'Software\Microsoft\Windows\CurrentVersion\Internet Settings';
@@ -70,6 +73,21 @@ var
     Proxy: String;
     InitialDir: String;
     userDirectory: String;
+    IniFile: TIniFile;
+    Lang: String;
+    EnabledStr: String;
+    DisabledStr: String;
+    ProxyEnabledStr: String;
+    ProxyDisabledStr: String;
+    MainFormCaption: String;
+    SettingFormCaption: String;
+    ConnectionGroupCaption: String;
+    N1Caption: String;
+    N2MinCaption: String;
+    N2MaxCaption: String;
+    N4Caption: String;
+    LangStr: String;
+    Connected: Boolean;
 
 implementation
 
@@ -77,7 +95,7 @@ implementation
 
 uses Settings;
 
-function TMainForm.ReadSetting: String;
+function TMainForm.ReadSettingProxy: String;
 var
     tProxy: String;
     Values: TStringDynArray;
@@ -93,7 +111,7 @@ begin
         tProxy := '127.0.0.1:80';
     end;
     Values := SplitString(tProxy, ':');
-    { * Если что-то ни так, то приводим к дефолту * }
+    {* Если что-то ни так, то приводим к дефолту *}
     if Length(Values) < 1 then
         Values[1] := '80';
     if Not RegIP.IsMatch(Values[0]) then
@@ -102,56 +120,83 @@ begin
         Values[1] := '80';
     tProxy := Values[0] + ':' + Values[1];
     RegSetting.WriteString('ProxyServer', tProxy);
-    RegSetting.Free;
     Result := tProxy;
 end;
 
-
-function TMainForm.SetProxy: String;
+procedure TMainForm.WriteSettingProxy;
 var
-  sProxy: String;
+    tProxy: String;
+    Values: TStringDynArray;
 begin
-  sProxy := ReadSetting;
-  LogApp('Load Config: ' + sProxy, False);
-  if WinVerNum >= 62 then
-  begin
-    // Windows 8 и Старше
-    Vers := true;
-    Result := sProxy;
-  end
-  else
-  begin
-    // Младше Windows 8
-    Vers := False;
-    Result := StringReplace(ProxyVar, '%ip:port%', sProxy,
-      [rfReplaceAll, rfIgnoreCase]);
-  end;
+    tProxy := SettingsForm.IpAdress.IPString + ':' + SettingsForm.Port.Text;
+    Values := SplitString(tProxy, ':');
+    RegIP := TRegEx.Create('^\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}$');
+    RegPort := TRegEx.Create('^\d{1,4}$');
+    {* Если что-то ни так, то приводим к дефолту *}
+    if StrToInt(Values[1]) < 1 then
+        Values[1] := '80';
+    if SettingsForm.IpAdress.IPStringToDword(Values[0]) <= 0 then
+        Values[0] := '127.0.0.1';
+    SettingsForm.IpAdress.IPString := Values[0];
+    SettingsForm.Port.Text := Values[1];
+    tProxy := Values[0] + ':' + Values[1];
+    RegSetting := TRegistry.Create;
+    RegSetting.RootKey := HKEY_CURRENT_USER;
+    RegSetting.OpenKey(SettingPath, true);
+    RegSetting.WriteString('ProxyServer', tProxy);
+    RegSetting.Free;
+    Proxy := GetProxy;
+    //Connected := False;
 end;
+
+function TMainForm.GetProxy: String;
+var
+    sProxy: String;
+begin
+    sProxy := ReadSettingProxy;
+    LogApp('Load Config: ' + sProxy, False);
+    if WinVerNum >= 62 then
+    begin
+        // Windows 8 и Старше
+        Vers := true;
+        Result := sProxy;
+    end
+    else
+    begin
+        // Младше Windows 8
+        Vers := False;
+        Result := StringReplace(ProxyVar, '%ip:port%', sProxy,
+          [rfReplaceAll, rfIgnoreCase]);
+    end;
+end;
+
 { *
   ** Определение версии Windows
   * }
 function TMainForm.WinVerNum: Integer;
 var
-  ver: TOSVersionInfo;
+    ver: TOSVersionInfo;
 begin
-  ver.dwOSVersionInfoSize := SizeOf(ver);
-  if GetVersionEx(ver) then
-  begin
-    with ver do
-      Result := StrToInt(IntToStr(dwMajorVersion) + '' +
-        IntToStr(dwMinorVersion));
-  end
-  else
-    Result := 1;
+    ver.dwOSVersionInfoSize := SizeOf(ver);
+    if GetVersionEx(ver) then
+    begin
+        with ver do
+            Result := StrToInt(IntToStr(dwMajorVersion) + '' +
+              IntToStr(dwMinorVersion));
+    end
+    else
+        Result := 1;
 end;
 
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-    if MainCanClose then
-        LogApp('=========  Остановка Программы  ==========', true)
-    else
-        MainForm.Visible := False;
-    CanClose := MainCanClose;
+    {
+      if MainCanClose then
+      LogApp('=========  Остановка Программы  ==========', true)
+      else
+      MainForm.Visible := False;
+      CanClose := MainCanClose;
+    }
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -161,24 +206,89 @@ begin
     if Not TDirectory.Exists(userDirectory) then
         TDirectory.CreateDirectory(userDirectory);
     MainCanClose := False;
-    TrayIcon1.BalloonTitle := 'Прокси Конфиг';
-    TrayIcon1.BalloonHint := '';
-    Proxy := SetProxy;
-    ShowMessage(Proxy);
+    Proxy := GetProxy;
+    Connected := False;
+end;
+
+procedure TMainForm.FormShow(Sender: TObject);
+begin
+    LoadLang;
+end;
+
+procedure TMainForm.LoadLang;
+var
+    list: TStringList;
+begin
+    list := TStringList.Create;
+    IniFile := TIniFile.Create(TPath.Combine(userDirectory, 'Language.ini'));
+    Lang := IniFile.ReadString('Language', 'lang', 'Русский');
+    IniFile.WriteString('Language', 'lang', Lang);
+
+    MainFormCaption := IniFile.ReadString(Lang, 'MainFormCaption', 'Прокси Конфиг');
+    SettingFormCaption := IniFile.ReadString(Lang, 'SettingFormCaption', 'Настройки');
+    ConnectionGroupCaption := IniFile.ReadString(Lang, 'ConnectionGroupCaption', 'Подключение');
+    N1Caption := IniFile.ReadString(Lang, 'N1Caption', 'Настройки');
+    N2MinCaption := IniFile.ReadString(Lang, 'N2MinCaption', 'Свернуть');
+    N2MaxCaption := IniFile.ReadString(Lang, 'N2MaxCaption', 'Развернуть');
+    N4Caption := IniFile.ReadString(Lang, 'N4Caption', 'Настройки');
+    ProxyEnabledStr := IniFile.ReadString(Lang, 'ProxyEnabledStr', 'Прокси подключён');
+    ProxyDisabledStr := IniFile.ReadString(Lang, 'ProxyDisabledStr', 'Прокси отключён');
+    EnabledStr := IniFile.ReadString(Lang, 'EnabledStr', 'Подключено');
+    DisabledStr := IniFile.ReadString(Lang, 'DisabledStr', 'Отключено');
+    LangStr := IniFile.ReadString(Lang, 'LangStr', 'Язык');
+
+    IniFile.WriteString(Lang, 'MainFormCaption', MainFormCaption);
+    IniFile.WriteString(Lang, 'SettingFormCaption', SettingFormCaption);
+    IniFile.WriteString(Lang, 'ConnectionGroupCaption', ConnectionGroupCaption);
+    IniFile.WriteString(Lang, 'N1Caption', N1Caption);
+    IniFile.WriteString(Lang, 'N2MinCaption', N2MinCaption);
+    IniFile.WriteString(Lang, 'N2MaxCaption', N2MaxCaption);
+    IniFile.WriteString(Lang, 'N4Caption', N4Caption);
+    IniFile.WriteString(Lang, 'ProxyEnabledStr', ProxyEnabledStr);
+    IniFile.WriteString(Lang, 'ProxyDisabledStr', ProxyDisabledStr);
+    IniFile.WriteString(Lang, 'EnabledStr', EnabledStr);
+    IniFile.WriteString(Lang, 'DisabledStr', DisabledStr);
+    IniFile.WriteString(Lang, 'LangStr', LangStr);
+
+    IniFile.ReadSections(list);
+    IniFile.Free;
+
+    Caption := MainFormCaption;
+    ConnectionGroup.Caption := ConnectionGroupCaption;
+    N1.Caption := N1Caption;
+    N4.Caption := N4Caption;
+    if Connected then
+    begin
+        ConnectionBtn.Caption := EnabledStr;
+        StatusBar1.Panels[0].Text := EnabledStr;
+    end
+    else
+    begin
+        ConnectionBtn.Caption := DisabledStr;
+        StatusBar1.Panels[0].Text := DisabledStr;
+    end;
+    if MainForm.Visible then
+    begin
+        N2.Caption := N2MinCaption;
+    end
+    else
+    begin
+        N2.Caption := N2MaxCaption;
+    end;
 end;
 
 procedure TMainForm.CreateParams(var Params: TCreateParams);
 begin
     inherited;
-        Params.ExStyle := Params.ExStyle and not WS_EX_APPWINDOW;
-        Params.WndParent := Application.Handle;
+    Params.ExStyle := Params.ExStyle and not WS_EX_APPWINDOW;
+    Params.WndParent := Application.Handle;
 end;
 
 procedure TMainForm.LogApp(S: String; WR: Boolean);
 var
     text: string;
 begin
-    text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now) + ' > ' + S;
+    text := FormatDateTime('dd.mm.yyyy hh:mm:ss zzz мс', Now) + ' > ' + S;
     if Not WR then
         ds.Items.Add(text);
     SendMessage(ds.Handle, WM_VSCROLL, SB_BOTTOM, 0);
@@ -186,26 +296,30 @@ end;
 
 procedure TMainForm.MenuItem1Click(Sender: TObject);
 begin
-    MainForm.Visible := True;
+    MainForm.Visible := true;
     MainForm.FormStyle := fsStayOnTop;
     MainForm.FormStyle := fsNormal;
-    SettingsForm.ShowModal;
+    if SettingsForm.ShowModal = mrOK then
+    begin
+       LoadLang;
+       WriteSettingProxy;
+    end;
 end;
 
 procedure TMainForm.N2Click(Sender: TObject);
 begin
-    if not SettingsForm.Visible then
+    if not SettingsForm.Showing then
     begin
-      if MainForm.Visible = False then
-      begin
-          MainForm.Visible := True;
-          MainForm.FormStyle := fsStayOnTop;
-          MainForm.FormStyle := fsNormal;
-      end
-      else
-      begin
-          MainForm.Visible := False;
-      end;
+        if MainForm.Visible = False then
+        begin
+            MainForm.Visible := true;
+            MainForm.FormStyle := fsStayOnTop;
+            MainForm.FormStyle := fsNormal;
+        end
+        else
+        begin
+            MainForm.Visible := False;
+        end;
     end;
 end;
 
@@ -225,18 +339,18 @@ begin
         MyThread := ExecuteCMD.Create(False);
         MyThread.OnTerminate := OnEnabledTerminate;
     end;
-    TrayIcon1.Animate := True;
+    TrayIcon1.Animate := true;
 end;
 
 procedure TMainForm.Timer1Timer(Sender: TObject);
 begin
-    StatusBar1.Panels.Items[1].Text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now);
+    StatusBar1.Panels.Items[1].text := FormatDateTime('dd.mm.yyyy hh:mm:ss', Now);
 end;
 
 procedure TMainForm.TrayIcon1Click(Sender: TObject);
 begin
     if MainForm.Visible = False then
-        MainForm.Visible := True;
+        MainForm.Visible := true;
     MainForm.FormStyle := fsStayOnTop;
     MainForm.FormStyle := fsNormal;
 end;
@@ -245,14 +359,14 @@ procedure TMainForm.TrayIcon1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
     if MainForm.Visible = False then
-        MainForm.Visible := True;
+        MainForm.Visible := true;
     MainForm.FormStyle := fsStayOnTop;
     MainForm.FormStyle := fsNormal;
 end;
 
 procedure TMainForm.OnDisabledTerminate(Sender: TObject);
 begin
-    LogApp('Proxy Отключен', False);
+    LogApp(ProxyDisabledStr, False);
     TrayIcon1.Animate := False;
     ConnectionBtn.ImageIndex := 0;
     ConnectionBtn.DisabledImageIndex := 0;
@@ -260,9 +374,9 @@ begin
     ConnectionBtn.PressedImageIndex := 0;
     ConnectionBtn.SelectedImageIndex := 0;
     StatusBar1.Panels.Items[0].ImageIndex := 0;
-    ConnectionBtn.Caption := 'Не подключено';
-    StatusBar1.Panels.Items[0].Text :=  'Не подключено';
-    ConnectionBtn.Enabled := True;
+    ConnectionBtn.Caption := DisabledStr;
+    StatusBar1.Panels.Items[0].text := DisabledStr;
+    ConnectionBtn.Enabled := true;
     TrayIcon1.IconIndex := 0;
     TrayIcon1.PopupMenu := PopupMenu2;
     StatusBar1.PopupMenu := PopupMenu1;
@@ -271,7 +385,7 @@ end;
 
 procedure TMainForm.OnEnabledTerminate(Sender: TObject);
 begin
-    LogApp('Proxy Подключен', False);
+    LogApp(ProxyEnabledStr, False);
     TrayIcon1.Animate := False;
     ConnectionBtn.ImageIndex := 1;
     ConnectionBtn.DisabledImageIndex := 1;
@@ -279,9 +393,9 @@ begin
     ConnectionBtn.PressedImageIndex := 1;
     ConnectionBtn.SelectedImageIndex := 1;
     StatusBar1.Panels.Items[0].ImageIndex := 1;
-    ConnectionBtn.Caption := 'Подключено';
-    StatusBar1.Panels.Items[0].Text :=  'Подключено';
-    ConnectionBtn.Enabled := True;
+    ConnectionBtn.Caption := EnabledStr;
+    StatusBar1.Panels.Items[0].text := EnabledStr;
+    ConnectionBtn.Enabled := true;
     TrayIcon1.IconIndex := 1;
     TrayIcon1.PopupMenu := PopupMenu2;
     StatusBar1.PopupMenu := PopupMenu1;
@@ -292,8 +406,8 @@ procedure TMainForm.PopupMenu2Popup(Sender: TObject);
 begin
     if not SettingsForm.Showing then
     begin
-        N2.Enabled := True;
-        N4.Enabled := True;
+        N2.Enabled := true;
+        N4.Enabled := true;
     end
     else
     begin
@@ -302,12 +416,12 @@ begin
     end;
     if MainForm.Visible then
     begin
-        N2.Caption := 'Свернуть';
+        N2.Caption := N2MinCaption;
         N2.ImageIndex := 3;
     end
     else
     begin
-        N2.Caption := 'Развернуть';
+        N2.Caption := N2MaxCaption;
         N2.ImageIndex := 4;
     end;
 end;
